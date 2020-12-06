@@ -1,24 +1,28 @@
 import './App.css';
 import { Typography, Row, Col, Card } from 'antd';
-import { Chart, Line } from 'bizcharts';
+import { Chart, Interval } from 'bizcharts';
 import { useEffect, useState } from 'react';
-import { getServiceList } from './request';
+import { getServiceList, getServiceMetrics } from './request';
 
 function App() {
 
-  const data = [
-    { month: '2020-01-01', acc: 1.23 },
-    { month: '2020-01-02', acc: 0.46 },
-    { month: '2020-01-03', acc: 2.11 },
-    { month: '2020-01-04', acc: 3.3 },
-    { month: '2020-01-05', acc: 5.23 },
-  ];
-
   const [services, updateServiceList] = useState([]);
+  const [serviceMetrics, updateServiceMetrics] = useState({});
 
   useEffect(() => {
     getServiceList().then(serviceList => updateServiceList(serviceList));
   }, []);
+
+  useEffect(() => {
+    for(const service of services) {
+      getServiceMetrics(service._id).then(serviceMetricsList => {
+        updateServiceMetrics({
+          ...serviceMetrics,
+          [service._id]: serviceMetricsList,
+        })
+      });
+    }
+  }, [services]);
 
   return (
     <div>
@@ -27,24 +31,24 @@ function App() {
             <Typography.Title>
               Status Page
             </Typography.Title>
-            {Object.keys(services).map(k => (
-              <Col key={k}>
-                <Card title={services[k].name}></Card>
-              </Col>
-            ))}
-            <Chart
-              scale={{ value: { min: 0 } }}
-              padding={[ 10, 20, 50, 40 ]}
-              autoFit
-              height={500}
-              data={data}
-            >
-              <Line
-                shape="smooth"
-                position="month*acc"
-                color="l (270) 0:rgba(255, 146, 255, 1) .5:rgba(100, 268, 255, 1) 1:rgba(215, 0, 255, 1)"
-              />
-            </Chart>
+            <div style={{ display: 'none'}}>{JSON.stringify(serviceMetrics)}</div>
+            <Row gutter={12} justify="space-around">
+              {Object.keys(services).map(k => (
+                <Col key={k} span={24}>
+                  <Card title={services[k].name}>
+                  <Chart
+                    autoFit
+                    height={200}
+                    data={serviceMetrics[services[k]._id]}
+                  >
+                    <Interval
+                      position="createdAt*time"
+                    />
+                  </Chart>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
           </Col>
       </Row>
     </div>

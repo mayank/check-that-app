@@ -11,3 +11,15 @@ export const getServiceList = async () => {
         
     }
 };
+
+export const getServiceMetrics = async (serviceId) => {
+    try {
+        const response = await axios.post(url + '/service/info', {
+            serviceId,
+        });
+        return response.data;
+    }
+    catch(err) {
+        
+    }
+};
