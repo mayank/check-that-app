@@ -1,6 +1,6 @@
 import './App.css';
 import { Typography, Row, Col, Card, Statistic, Divider } from 'antd';
-import { Area, Chart, Interval, Line, registerShape } from 'bizcharts';
+import { Area, Axis, Chart, Interval, Legend, Line, Point, registerShape } from 'bizcharts';
 import { useEffect, useRef, useState } from 'react';
 import { getServiceList, getServiceMetrics } from './request';
 
@@ -76,21 +76,30 @@ function App() {
               <Col key={k} span={24}>
                 <Card title={services[k].name}>
                   <Row justify="space-around">
-                    <Col span={8}>
+                    <Col span={5}>
                       <Statistic
                         title="Uptime"
                         value={services[k].upTime}
                         suffix="%"
                         valueStyle={{
-                          color: '#5b8c00'
+                          color: '#5b8c00',
                         }}
                       />
                     </Col>
-                    <Col span={8}>
+                    <Col span={5}>
                       <Statistic
                         title="Avg Response Time"
                         value={services[k].avgResponseTime}
                         suffix="ms"
+                        valueStyle={{
+                          color: '#0050b3'
+                        }}
+                      />
+                    </Col>
+                    <Col span={5}>
+                      <Statistic
+                        title="Failed Requests"
+                        value={services[k].failures || 0}
                         valueStyle={{
                           color: '#0050b3'
                         }}
@@ -101,41 +110,34 @@ function App() {
                     autoFit
                     height={200}
                     data={serviceMetrics[services[k]._id]}
-                    scale={{value:{min: 0}}}
+                    scale={
+                      {
+                        t: {
+                          min:0
+                        },
+                        f: {
+                          max: 60
+                        },
+                      }
+                    }
+                    pure
                   >
+                    <Axis name="f" grid={null} />
+                    <Axis name="t" grid={null} />
+
                     <Line
                       shape="smooth"
-                      position="createdAt*time"
+                      position="c*t"
+                      color="#91d5ff"
+                    />                    
+                    <Area position="c*t" color="#e6f7ff" />
+                    <Interval
+                      shape="smooth"
+                      position="c*f"
+                      color="#ff4d4f"
                     />
-                    <Area position="createdAt*time" />
                   </Chart>
                   <Divider />
-                  <Chart
-                    autoFit
-                    height={100}
-                    data={serviceMetrics[services[k]._id]}
-                    scale={{
-                      expected: {
-                        min:0,
-                        max:1,
-                        sync: "value"
-                      },
-                      actual: {
-                        sync: 'value',
-                      }
-                    }}
-                  >
-                    <Interval
-                      position="failures*createdAt"
-                      color="#ddd"
-                      shape={['expected*createdAt'], (val) => 0}
-                    />
-                    <Interval
-                      position="failures*createdAt"
-                      color="#a8071a"
-                      shape={['actual*createdAt'], (val) => val > 0 ? 1: 0}
-                    />
-                  </Chart>
                 </Card>
               </Col>
             ))}
